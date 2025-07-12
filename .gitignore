@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor Android project: exclude build artifacts and local configs
+
+# IDE / Gradle junk
+android/.gradle/
+android/.idea/
+android/.cxx/
+
+# Build output
+android/build/
+android/app/build/
+
+# Environment-specific config (do NOT share)
+android/local.properties
+
+# IntelliJ / Android Studio project files
+android/**/*.iml
+
+# Captured screenshots etc.
+android/captures/
