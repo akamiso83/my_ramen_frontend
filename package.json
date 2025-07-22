@@ -18,7 +18,9 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.1",
     "@capacitor/android": "^7.4.1",
+    "@capacitor/app": "^7.0.1",
     "@capacitor/cli": "^7.4.1",
     "@capacitor/core": "^7.4.1",
     "@tailwindcss/vite": "^4.1.11",

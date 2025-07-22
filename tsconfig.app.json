@@ -24,7 +24,9 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@mobile/*": ["src/mobile/*"],
+      "@admin/*": ["src/admin/*"]
     }
   },
   "include": ["src"]
