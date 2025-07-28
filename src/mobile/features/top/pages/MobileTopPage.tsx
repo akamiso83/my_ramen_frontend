@@ -1,106 +1,39 @@
-import { useEffect, useState } from 'react';
-import { fetcher } from '@/shared/api/fetcher';
-import { sqliteConnectionManager } from '@/shared/db/client';
-import { run, query } from '@/shared/db/executor'; // run() を使って INSERT 実行する
-const DB_NAME = 'app_data';
-const { open, close } = sqliteConnectionManager(DB_NAME);
-
-type User = {
-  id: number;
-  name: string;
-  email: string;
-};
+import { useRemoteUsers } from '@/mobile/features/top/hooks/useRemoteUsers';
+import { useLocalUsers } from '@mobile/features/top/hooks/useLocalUsers';
+import { useUserForm } from '@mobile/features/top/hooks/useUserForm';
+import { registerUser, syncUser } from '@mobile/features/top/services/userService';
 
 export const MobileTopPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  const [localUsers, setLocalUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await fetcher.get<User[]>('/users');
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching Userdata:', error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchLocalUsers = async () => {
-      try {
-        const db = await open();
-        const rows = await query<User>(db, 'SELECT id, name, email FROM users');
-        setLocalUsers(rows);
-      } catch (error) {
-        console.error('Error fetching SQLite users:', error);
-      }
-    };
-
-    fetchLocalUsers();
-  }, []);
+  const { users, setUsers } = useRemoteUsers();
+  const { localUsers, setLocalUsers } = useLocalUsers();
+  const { formData, handleChange, resetUserForm } = useUserForm();
 
   /**
-   * ユーザー登録formのonchangeハンドラー
-   * 開いている場合は明示的に close し、接続オブジェクトも破棄する
+   * 登録ボタン押下処理
    */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target);
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const db = await open();
-      await run(db, `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`, [
-        formData.name,
-        formData.email,
-        formData.password,
-      ]);
-      alert('登録完了');
-      setFormData({ name: '', email: '', password: '' });
-      // UIを更新（再取得）
-      const updatedRows = await query<User>(db, 'SELECT id, name, email FROM users');
-      setLocalUsers(updatedRows);
-      const updatedRestRows = await fetcher.get<User[]>('/users');
-      setUsers(updatedRestRows);
+      const { localUsers: updatedLocal, remoteUsers: updatedRemote } = await registerUser(formData);
+      resetUserForm();
+      setLocalUsers(updatedLocal);
+      setUsers(updatedRemote);
     } catch (err) {
-      console.error('SQLite Insert Failed:', err);
+      console.error('【handleSubmit】SQLite Insert Failed:', err);
       alert('登録失敗');
-    } finally {
-      await close();
     }
   };
 
+  /**
+   * 登録ボタン押下処理
+   */
   const handleSync = async () => {
     try {
-      const db = await open();
-
-      // SQLiteからローカルユーザーを取得
-      const rows = await query<User>(db, 'SELECT id, name, email, password FROM users');
-
-      if (rows.length === 0) {
-        alert('同期するユーザーがありません');
-        return;
-      }
-      console.log(rows);
-
-      // Laravel側へPOST（例: /api/sync/）
-      await fetcher.post('/sync', { users: rows });
-
-      // 成功したらSQLite側を削除
-      await run(db, 'DELETE FROM users');
-
-      // UIを更新（再取得）
-      const updatedRows = await query<User>(db, 'SELECT id, name, email FROM users');
-      setLocalUsers(updatedRows);
-
+      const { updatdLocalUsers } = await syncUser();
+      setLocalUsers(updatdLocalUsers);
       alert('同期完了');
     } catch (error) {
-      console.error('同期に失敗しました:', error);
+      console.error('【handleSync】user sync Failed:', error);
       alert('同期に失敗しました');
     }
   };
