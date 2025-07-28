@@ -14,7 +14,7 @@ export const useLocalUsers = () => {
         setLocalUsers(res);
       } catch (err) {
         setError(err as Error);
-        console.error('Error fetching SQLite users:', err);
+        console.error('[useLocalUsers] Error fetching SQLite users:', err);
       } finally {
         setLoading(false);
       }

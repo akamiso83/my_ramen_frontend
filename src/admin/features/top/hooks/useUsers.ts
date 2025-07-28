@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetcher } from '@/shared/api/fetcher';
 import type { ApiErrorResponse } from '@/shared/types/ApiErrorResponse';
-import type { User } from '@/admin/features/top/type';
+import type { User } from '@admin/features/top/type';
+import { getUsers } from '@admin/features/top/api/userApi';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -11,12 +11,11 @@ export const useUsers = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await fetcher.get<User[]>('/users');
-        console.log(data);
+        const data = await getUsers();
         setUsers(data);
       } catch (err) {
         setError(err as ApiErrorResponse);
-        console.error('Error fetching Userdata:', err);
+        console.error('[useUsers] Error fetching Userdata:', err);
       } finally {
         setLoading(false);
       }

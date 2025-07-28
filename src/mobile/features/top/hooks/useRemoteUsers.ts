@@ -15,7 +15,7 @@ export const useRemoteUsers = () => {
         setUsers(data);
       } catch (err) {
         setError(err as ApiErrorResponse);
-        console.error('Error fetching Userdata:', err);
+        console.error('[useRemoteUsers] Error fetching Userdata:', err);
       } finally {
         setLoading(false);
       }
