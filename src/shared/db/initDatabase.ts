@@ -1,6 +1,4 @@
 import { sqliteConnectionManager } from './client';
-import { query, execute } from './executor';
-import { checkTableExists } from './utils';
 type meta = {
   id: number;
   version: string;
@@ -12,10 +10,10 @@ const { open } = sqliteConnectionManager(DB_NAME);
 export const initDatabase = async () => {
   try {
     const db = await open();
-    const metaExists = await checkTableExists(db, 'meta');
+    const metaExists = await db.isTable('meta');
 
     if (metaExists) {
-      const rows = await query<meta>(db, 'SELECT * FROM meta LIMIT 1');
+      const rows = (await db.query('SELECT * FROM meta LIMIT 1')).values ?? ([] as meta[]);
       if (rows?.[0]?.initialized) {
         console.info('[SQLite] DB already initialized.');
         return;
@@ -28,8 +26,7 @@ export const initDatabase = async () => {
       return;
     }
 
-    await execute(
-      db,
+    await db.execute(
       `
       CREATE TABLE IF NOT EXISTS meta (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

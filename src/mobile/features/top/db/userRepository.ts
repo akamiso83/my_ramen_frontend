@@ -1,5 +1,4 @@
 import { sqliteConnectionManager } from '@/shared/db/client';
-import { query, run } from '@/shared/db/executor';
 import type { User } from '@admin/features/top/type';
 
 const DB_NAME = 'app_data';
@@ -11,7 +10,9 @@ const { open } = sqliteConnectionManager(DB_NAME);
 export const getLocalUsers = async (): Promise<User[]> => {
   try {
     const db = await open();
-    return await query<User>(db, 'SELECT id, name, email FROM users');
+    const sql = 'SELECT id, name, email FROM users';
+    const res = await db.query(sql);
+    return (res.values ?? []) as User[];
   } catch (e) {
     console.error('[getLocalUsers] Failed:', e);
     throw e;
@@ -28,11 +29,9 @@ export const postLocalUsers = async (formData: {
 }): Promise<void> => {
   try {
     const db = await open();
-    await run(db, `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`, [
-      formData.name,
-      formData.email,
-      formData.password,
-    ]);
+    const sql = `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`;
+    const params = [formData.name, formData.email, formData.password];
+    await db.run(sql, params);
   } catch (e) {
     console.error('[postLocalUsers] Failed:', e);
     throw e;
@@ -45,7 +44,8 @@ export const postLocalUsers = async (formData: {
 export const deleteLocalUsers = async (): Promise<void> => {
   try {
     const db = await open();
-    await run(db, 'DELETE FROM users');
+    const sql = 'DELETE FROM users';
+    await db.run(sql);
   } catch (e) {
     console.error('[deleteLocalUsers] Failed:', e);
     throw e;
