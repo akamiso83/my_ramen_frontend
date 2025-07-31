@@ -43,3 +43,6 @@ android/**/*.iml
 
 # Captured screenshots etc.
 android/captures/
+
+# env
+.env
